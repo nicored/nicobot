@@ -1,5 +1,7 @@
 # NicoBot
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/nicored/nicobot)](https://goreportcard.com/report/github.com/nicored/nicobot) [![Build Status](https://travis-ci.org/nicored/nicobot.svg)](https://travis-ci.org/nicored/nicobot) [![Coverage Status](https://coveralls.io/repos/github/nicored/nicobot/badge.svg?branch=master&v=2)](https://coveralls.io/github/nicored/d1req?branch=master)
+
 ## Overview
 
 NicoBot is a little red bot that travels on a table of
