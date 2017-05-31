@@ -67,5 +67,5 @@ Rotates the bot 90 degrees to the left
 Rotates the bot 90 degrees to the right
 
 #### MOVE
-Moves the bot one unit forward, in the direction is is currently facing
+Moves the bot one unit forward, in the direction it is currently facing
 
