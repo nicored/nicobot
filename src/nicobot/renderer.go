@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"deco"
-	"github.com/pkg/errors"
+	"errors"
 )
 
 const (
