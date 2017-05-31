@@ -82,13 +82,13 @@ func (r *Renderer) RenderWithCmd(bot *Bot, cmd string) {
 }
 
 // renderBotLine prints a specific line for the bot in a single unit
-func (r Renderer) renderBotLine(dir int, line int) {
+func (r Renderer) renderBotLine(dir string, line int) {
 	fmt.Print(getBotLine(dir, line))
 }
 
 // getBotLine returns a string containing the content of a specific
 // line for the bot in a single unit
-func getBotLine(dir int, line int) string {
+func getBotLine(dir string, line int) string {
 	switch dir {
 	case Right:
 		return horiBot[line]

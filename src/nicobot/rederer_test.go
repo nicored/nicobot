@@ -8,7 +8,7 @@ import (
 
 func TestGetBotLine(t *testing.T) {
 	testCases := []struct {
-		Dir      int
+		Dir      string
 		Expected string
 	}{
 		{

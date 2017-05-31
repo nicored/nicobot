@@ -7,17 +7,20 @@ import (
 )
 
 const (
-	_    = iota
-	Left // starts at 1
-	Down
-	Up
-	Right
+	Left  = "left"
+	Down  = "down"
+	Up    = "up"
+	Right = "right"
+
+	Move   = "move"
+	Report = "report"
+	Place  = "place"
 
 	NonApplicable = "N/a"
-	West          = "WEST"
-	East          = "EAST"
-	North         = "NORTH"
-	South         = "SOUTH"
+	West          = "west"
+	East          = "east"
+	North         = "north"
+	South         = "south"
 
 	ErrMsgFalling   = "BOT REFUSES TO FALL AND BREAK"
 	ErrMsgNotPlaced = "BOT CANNOT MOVE IF NOT PLACED (eg. PLACE 1,2,NORTH)"
@@ -30,10 +33,34 @@ const (
 var (
 	ErrorFalling   = errors.New(ErrMsgFalling)
 	ErrorNotPlaced = errors.New(ErrMsgNotPlaced)
+
+	allowedCmds = map[string]bool{
+		Left:   false,
+		Right:  false,
+		Down:   false,
+		Up:     false,
+		Report: false,
+		Move:   false,
+		Place:  true,
+	}
+
+	directions = map[string]bool{
+		Left:  true,
+		Right: true,
+		Down:  true,
+		Up:    true,
+	}
+
+	dirFacing = map[string]bool{
+		West:  true,
+		East:  true,
+		South: true,
+		North: true,
+	}
 )
 
 type Bot struct {
-	direction int // from the Left, Down, Up and Right constants
+	direction string // from the West, East, North, South
 	point     *image.Point
 	lastError error
 	lastCmd   string
@@ -42,7 +69,7 @@ type Bot struct {
 // Move updates the Bot's coordinates by incrementing x or y
 // based on the direction. The function returns an error if the move
 // cannot be completed; ErrorNotPlaced or ErrorFalling
-func (b *Bot) Move(dir int) {
+func (b *Bot) Move(dir string) {
 	// No matter if the bot can move or not, we want to the direction
 	b.direction = dir
 
@@ -62,7 +89,7 @@ func (b *Bot) Move(dir int) {
 	b.lastError = b.moveVertically(dir)
 }
 
-func (b *Bot) Place(dir int, x int, y int) {
+func (b *Bot) Place(dir string, x int, y int) {
 	b.point = &image.Point{x, y}
 	b.direction = dir
 }
@@ -103,7 +130,7 @@ func (b Bot) IsPlaced() bool {
 	return b.point != nil
 }
 
-func (b *Bot) moveHorizontally(dir int) error {
+func (b *Bot) moveHorizontally(dir string) error {
 	move := 1
 	if dir == Left {
 		move = -1
@@ -117,7 +144,7 @@ func (b *Bot) moveHorizontally(dir int) error {
 	return nil
 }
 
-func (b *Bot) moveVertically(dir int) error {
+func (b *Bot) moveVertically(dir string) error {
 	move := 1
 	if dir == Down {
 		move = -1
