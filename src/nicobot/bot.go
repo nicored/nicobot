@@ -2,59 +2,97 @@ package nicobot
 
 import (
 	"errors"
+	"fmt"
 	"image"
 )
 
 const (
 	_    = iota
-	left // starts at 1
-	down
-	up
-	right
+	Left // starts at 1
+	Down
+	Up
+	Right
+
+	NonApplicable = "N/a"
+	West          = "WEST"
+	East          = "EAST"
+	North         = "NORTH"
+	South         = "SOUTH"
+
+	ErrMsgFalling   = "BOT REFUSES TO FALL AND BREAK"
+	ErrMsgNotPlaced = "BOT CANNOT MOVE IF NOT PLACED (eg. PLACE 1,2,NORTH)"
+	ErrMsgOffTable  = "BOT IS OFF THE TABLE, PLACE BOT IF YOU WANT TO PLAY"
+
+	StatusNotPlaced = "BOT IS NOT PLACED"
+	StatusOffTable  = "BOT IS OFF THE TABLE"
 )
 
 var (
-	ErrorFalling   = errors.New("Robot is going to fall")
-	ErrorNotPlaced = errors.New("Robot needs to be placed first (eg. PLACE 1,2,NORTH)")
+	ErrorFalling   = errors.New(ErrMsgFalling)
+	ErrorNotPlaced = errors.New(ErrMsgNotPlaced)
 )
 
 type Bot struct {
-	direction int // from the left, down, up and right constants
+	direction int // from the Left, Down, Up and Right constants
 	point     *image.Point
+	lastError error
+	lastCmd   string
 }
 
 // Move updates the Bot's coordinates by incrementing x or y
 // based on the direction. The function returns an error if the move
 // cannot be completed; ErrorNotPlaced or ErrorFalling
-func (b *Bot) Move(dir int) error {
-	if b.IsPlaced() == false {
-		return ErrorNotPlaced
-	}
-
+func (b *Bot) Move(dir int) {
 	// No matter if the bot can move or not, we want to the direction
 	b.direction = dir
 
-	if dir == right || dir == left {
-		return b.moveHorizontally(dir)
+	if b.IsPlaced() == false {
+		b.lastError = ErrorNotPlaced
+		return
+	} else if !isOnTable(b.point.X, b.point.Y) {
+		b.lastError = errors.New(ErrMsgOffTable)
+		return
 	}
 
-	return b.moveVertically(dir)
+	if dir == Right || dir == Left {
+		b.lastError = b.moveHorizontally(dir)
+		return
+	}
+
+	b.lastError = b.moveVertically(dir)
 }
 
-// Faces returns the direction the bot is based on the previous move.
+func (b *Bot) Place(dir int, x int, y int) {
+	b.point = &image.Point{x, y}
+	b.direction = dir
+}
+
+// String returns the direction and coordinates of the bot
+// in a readable string format
+func (b Bot) String() string {
+	if b.point == nil {
+		return StatusNotPlaced
+	} else if !isOnTable(b.point.X, b.point.Y) {
+		return StatusOffTable
+	}
+
+	return fmt.Sprintf("DIR: %s | X: %d | Y: %d", b.Facing(), b.point.X, b.point.Y)
+}
+
+// Facing returns the direction the bot is based on the previous move.
 // Possible outputs are: N/A, EAST, WEST, SOUTH, NORTH
-func (b Bot) Faces() string {
+func (b Bot) Facing() string {
 	switch b.direction {
-	case right:
-		return "EAST"
-	case left:
-		return "WEST"
-	case down:
-		return "SOUTH"
-	case up:
-		return "NORTH"
+	case Right:
+		return East
+	case Left:
+		return West
+	case Down:
+		return South
+	case Up:
+		return North
 	default:
-		return "N/A"
+		return NonApplicable
 	}
 }
 
@@ -62,12 +100,12 @@ func (b Bot) Faces() string {
 // The function will return false if the bot is not placed, or if it
 // is outside of the table's boundaries. True otherwise
 func (b Bot) IsPlaced() bool {
-	return b.point != nil && isOnTable(b.point.X, b.point.Y)
+	return b.point != nil
 }
 
 func (b *Bot) moveHorizontally(dir int) error {
 	move := 1
-	if dir == left {
+	if dir == Left {
 		move = -1
 	}
 
@@ -81,7 +119,7 @@ func (b *Bot) moveHorizontally(dir int) error {
 
 func (b *Bot) moveVertically(dir int) error {
 	move := 1
-	if dir == down {
+	if dir == Down {
 		move = -1
 	}
 
