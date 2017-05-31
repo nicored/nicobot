@@ -7,6 +7,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestBot_Turn(t *testing.T) {
+	bot := &Bot{
+		direction: North,
+	}
+
+	bot.Turn(Right)
+	assert.Equal(t, East, bot.direction)
+
+	bot.Turn(Right)
+	assert.Equal(t, South, bot.direction)
+
+	bot.Turn(Right)
+	assert.Equal(t, West, bot.direction)
+
+	bot.Turn(Right)
+	assert.Equal(t, North, bot.direction)
+
+	bot.Turn(Left)
+	assert.Equal(t, West, bot.direction)
+
+	bot.Turn(Left)
+	assert.Equal(t, South, bot.direction)
+}
+
 func TestBot_IsPlaced(t *testing.T) {
 	var actual bool
 
@@ -20,84 +44,65 @@ func TestBot_IsPlaced(t *testing.T) {
 
 	b.point.X = 10
 	actual = b.IsPlaced()
-	assert.False(t, actual)
-
-	b.point.X = 0
-	b.point.Y = 10
-	actual = b.IsPlaced()
-	assert.False(t, actual)
-
-	b.point.X = 5
-	actual = b.IsPlaced()
-	assert.False(t, actual)
+	assert.True(t, actual)
 }
 
 func TestBot_Move(t *testing.T) {
-	var err error
+	b := &Bot{}
 
-	b := Bot{}
-	err = b.Move(right)
-	assert.Equal(t, ErrorNotPlaced, err)
+	b.Move()
+	assert.Error(t, ErrorNotPlaced, b.lastError)
 
-	b.point = &image.Point{10, 10}
-	err = b.Move(right)
-	assert.Equal(t, ErrorNotPlaced, err)
-
-	b.point.X = 0
-	b.point.Y = 0
-	err = b.Move(left)
-	assert.Equal(t, ErrorFalling, err)
-	assert.Equal(t, 0, b.point.X)
-	assert.Equal(t, 0, b.point.Y)
-	assert.Equal(t, left, b.direction)
-
-	err = b.Move(right)
-	assert.NoError(t, err)
+	b.Place(East, 0, 0)
+	b.Move()
 	assert.Equal(t, 1, b.point.X)
 	assert.Equal(t, 0, b.point.Y)
-	assert.Equal(t, right, b.direction)
 
-	err = b.Move(down)
-	assert.Equal(t, ErrorFalling, err)
-	assert.Equal(t, 1, b.point.X)
-	assert.Equal(t, 0, b.point.Y)
-	assert.Equal(t, down, b.direction)
+	b.Place(West, 10, 10)
+	b.Move()
+	assert.Equal(t, ErrorOffTable, b.lastError)
+	assert.Equal(t, 10, b.point.X)
+	assert.Equal(t, 10, b.point.Y)
 
-	err = b.Move(up)
-	assert.NoError(t, err)
-	assert.Equal(t, 1, b.point.X)
+	b.Place(West, 3, 1)
+	b.Move()
+	assert.Equal(t, 2, b.point.X)
 	assert.Equal(t, 1, b.point.Y)
-	assert.Equal(t, up, b.direction)
 
-	err = b.Move(down)
-	assert.NoError(t, err)
+	b.Place(East, 4, 2)
+	b.Move()
+	assert.Equal(t, ErrorFalling, b.lastError)
+	assert.Equal(t, 4, b.point.X)
+	assert.Equal(t, 2, b.point.Y)
+
+	b.Place(North, 1, 2)
+	b.Move()
+	assert.Equal(t, 1, b.point.X)
+	assert.Equal(t, 3, b.point.Y)
+
+	b.Place(North, 2, 4)
+	b.Move()
+	assert.Equal(t, ErrorFalling, b.lastError)
+	assert.Equal(t, 2, b.point.X)
+	assert.Equal(t, 4, b.point.Y)
+
+	b.Place(South, 1, 1)
+	b.Move()
 	assert.Equal(t, 1, b.point.X)
 	assert.Equal(t, 0, b.point.Y)
-	assert.Equal(t, down, b.direction)
 }
 
-func TestBot_Direction(t *testing.T) {
-	var actual string
+func TestBot_String(t *testing.T) {
+	b := &Bot{}
 
-	b := Bot{}
+	status := b.String()
+	assert.Equal(t, StatusNotPlaced, status)
 
-	actual = b.Faces()
-	assert.Equal(t, "N/A", actual)
+	b.Place(West, 10, 10)
+	status = b.String()
+	assert.Equal(t, StatusOffTable, status)
 
-	b.direction = down
-	actual = b.Faces()
-	assert.Equal(t, "SOUTH", actual)
-
-	b.direction = up
-	actual = b.Faces()
-	assert.Equal(t, "NORTH", actual)
-
-	b.direction = left
-	actual = b.Faces()
-	assert.Equal(t, "WEST", actual)
-
-	b.direction = right
-	actual = b.Faces()
-	assert.Equal(t, "EAST", actual)
-
+	b.Place(West, 1, 3)
+	status = b.String()
+	assert.Equal(t, "DIR: west | X: 1 | Y: 3", status)
 }
