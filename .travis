@@ -1,0 +1,17 @@
+language: go
+
+sudo: false
+
+go:
+  - 1.8
+
+install:
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/mattn/goveralls
+  - go get github.com/modocache/gover
+  - export GOPATH=$GOPATH:`pwd`
+
+script:
+  - go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' ./src/nicobot | xargs -L 1 sh -c
+  - $HOME/gopath/bin/gover
+  - $HOME/gopath/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci -repotoken $COVERALLS_TOKEN
