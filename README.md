@@ -8,6 +8,16 @@ NicoBot is a little red bot that travels on a table of
 5x5 units. You can either give it instructions from a text
 file, or enter them manually.
 
+## Demonstraction
+
+### Using a file with instruction (./data/test.txt)
+![Demo with file](./data/gifs/nicobot_file.gif "Nicobot demo with file")
+
+
+### Using the user interface
+![Demo with ui](./data/gifs/nicobot_cmd.gif "Nicobot demo with ui")
+
+
 ## How to install
 
 The following command will install nicobot binary to your $GOBIN 
@@ -59,10 +69,3 @@ Rotates the bot 90 degrees to the right
 #### MOVE
 Moves the bot one unit forward, in the direction is is currently facing
 
-## Demonstraction
-
-### Using a file with instruction (./data/test.txt)
-![Demo with file](./data/gifs/nicobot_file.gif "Nicobot demo with file")
-
-### Using the user interface
-![Demo with ui](./data/gifs/nicobot_cmd.gif "Nicobot demo with ui")
