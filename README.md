@@ -1,6 +1,6 @@
 # NicoBot
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/nicored/nicobot)](https://goreportcard.com/report/github.com/nicored/nicobot) [![Build Status](https://travis-ci.org/nicored/nicobot.svg)](https://travis-ci.org/nicored/nicobot) [![Coverage Status](https://coveralls.io/repos/github/nicored/nicobot/badge.svg?branch=master&v=2)](https://coveralls.io/github/nicored/nicobot?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nicored/nicobot)](https://goreportcard.com/report/github.com/nicored/nicobot) [![Build Status](https://travis-ci.org/nicored/nicobot.svg)](https://travis-ci.org/nicored/nicobot) [![Coverage Status](https://coveralls.io/repos/github/nicored/nicobot/badge.svg?branch=master&v=2)](https://coveralls.io/github/nicored/nicobot?branch=master) [![GoDoc](https://godoc.org/github.com/nicored/nicobot/src/nicobot?status.svg)](https://godoc.org/github.com/nicored/nicobot/src/nicobot)
 
 ## Overview
 
