@@ -4,14 +4,16 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"nicobot"
 	"os"
 	"time"
+
+	"deco"
+	"nicobot"
 )
 
 func main() {
 	bot := &nicobot.Bot{}
-	renderer := nicobot.Renderer{}
+	renderer := &nicobot.Renderer{}
 
 	args := os.Args[1:]
 	if len(args) == 0 {
@@ -19,9 +21,17 @@ func main() {
 		return
 	}
 
+	// If arguments were found, then we try to process the file
+	processFromFile(args, bot, renderer)
+}
+
+func processFromFile(args []string, bot *nicobot.Bot, renderer *nicobot.Renderer) {
 	file, err := os.Open(args[0])
 	if err != nil {
+		deco.Color(deco.BgRed)
 		fmt.Println("\033[31m" + err.Error() + "\033[0m")
+		deco.Color(deco.DefaultColor)
+
 		os.Exit(1)
 	}
 
@@ -41,4 +51,6 @@ func main() {
 		renderer.RenderWithCmd(bot, cmd)
 		<-ticker
 	}
+
+	os.Exit(0)
 }

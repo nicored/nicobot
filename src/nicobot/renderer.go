@@ -4,22 +4,27 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 
 	"deco"
 	"github.com/pkg/errors"
 )
 
 const (
-	TableUnitsX = 5
-	TableUnitsY = 5
+	TableUnitsX                = 5
+	TableUnitsY                = 5
+	ConsoleUnitsPerTableUnitsX = 11
+	ConsoleUnitsPerTableUnitsY = 5
 )
 
 // Renderer is a struct that make it possible to render the
 // table and the bot
 type Renderer struct {
-	lines  int
-	report bool
+	lines int
 }
+
+// paddingX is the width of the table in console units
+var paddingX = strconv.Itoa(ConsoleUnitsPerTableUnitsX*TableUnitsX + (TableUnitsX - 1))
 
 // unitLine is a plain line
 var unitLine = "███████████"
@@ -48,26 +53,19 @@ var vertBot = []string{
 // the errors, the report and the state of the bot
 func (r *Renderer) RenderWithPrompt(bot *Bot) {
 	for {
-		deco.Clear(r.lines)
-		r.lines = 0
-
-		r.renderError(bot.lastError)
-		r.renderRows(bot)
-		r.renderStatus(bot)
+		r.renderCommon(bot)
 		r.renderCmdPrompt(bot)
-
-		if r.report {
-			r.renderReport(bot)
-			r.report = false
-		}
 	}
 }
 
 // RenderWithCmd takes a cmd, parses it, and render the table, the bot,
 // the errors, the report and the state of the bot
 func (r *Renderer) RenderWithCmd(bot *Bot, cmd string) {
-	r.report = ParseCommand(bot, cmd)
+	RunCommand(bot, cmd)
+	r.renderCommon(bot)
+}
 
+func (r *Renderer) renderCommon(bot *Bot) {
 	deco.Clear(r.lines)
 	r.lines = 0
 
@@ -75,9 +73,8 @@ func (r *Renderer) RenderWithCmd(bot *Bot, cmd string) {
 	r.renderRows(bot)
 	r.renderStatus(bot)
 
-	if r.report {
+	if bot.lastReport != "" {
 		r.renderReport(bot)
-		r.report = false
 	}
 }
 
@@ -90,27 +87,27 @@ func (r Renderer) renderBotLine(dir string, line int) {
 // line for the bot in a single unit
 func getBotLine(dir string, line int) string {
 	switch dir {
-	case Right:
+	case East:
 		return horiBot[line]
-	case Up:
+	case North:
 		return vertBot[line]
-	case Down:
+	case South:
 		return vertBot[len(vertBot)-(1+line)]
-	case Left:
+	case West:
 		reversed := ""
 		for _, prune := range horiBot[line] {
 			reversed = string(prune) + reversed
 		}
 		return reversed
 	default:
-		return fmt.Sprintf("%-11s", "")
+		return fmt.Sprintf("%-"+strconv.Itoa(ConsoleUnitsPerTableUnitsX)+"s", "")
 	}
 }
 
 // renderRows prints out all rows representing the table to the console
 func (r *Renderer) renderRows(bot *Bot) {
-	for y := 0; y < TableUnitsY*5; y++ {
-		if y%5 == 0 && y > 0 {
+	for y := 0; y < TableUnitsY*ConsoleUnitsPerTableUnitsY; y++ {
+		if y%TableUnitsY == 0 && y > 0 {
 			r.renderRowSep()
 		}
 
@@ -132,7 +129,7 @@ func (r *Renderer) renderCmdPrompt(bot *Bot) {
 		return
 	}
 
-	r.report = ParseCommand(bot, action)
+	RunCommand(bot, action)
 }
 
 // renderColumns prints all columns in a row to the console
@@ -142,9 +139,9 @@ func (r *Renderer) renderColumns(bot *Bot, y int) {
 			r.renderColSep()
 		}
 
-		if bot.point != nil && bot.point.X == x && 4-bot.point.Y == y/5 {
+		if bot.point != nil && bot.point.X == x && (ConsoleUnitsPerTableUnitsY-1)-bot.point.Y == y/ConsoleUnitsPerTableUnitsY {
 			deco.Color(deco.TextRed)
-			r.renderBotLine(bot.direction, y%5)
+			r.renderBotLine(bot.direction, y%TableUnitsY)
 			deco.Color(deco.DefaultColor)
 		} else {
 			r.renderUnitLine()
@@ -173,21 +170,13 @@ func (r *Renderer) renderError(err error) {
 		return
 	}
 
-	fmt.Printf(deco.BgRed+"%-59s\n"+deco.DefaultColor, err)
+	fmt.Printf(deco.BgRed+"%-"+paddingX+"s\n"+deco.DefaultColor, err)
 }
 
 // renderReport prints a new line containing report's information
 // in the following format: "Output: X,Y,DIRECTION
 func (r *Renderer) renderReport(bot *Bot) {
-	var output string
-
-	if bot.point == nil {
-		output = "Output: NO REPORT AVAILABLE"
-	} else {
-		output = fmt.Sprintf("Output: %d,%d,%s", bot.point.X, bot.point.Y, bot.Facing())
-	}
-
-	fmt.Printf("%-59s", output)
+	fmt.Printf("%-"+paddingX+"s\n", bot.lastReport)
 	r.lines++
 }
 

@@ -10,7 +10,9 @@ import (
 	"strings"
 )
 
-func ParseCommand(bot *Bot, action string) bool {
+// ParseCommand parses the command entered by the user to place or move
+// the bot, get the report
+func RunCommand(bot *Bot, action string) {
 	// Last error is always the result of current cmd
 	bot.lastError = nil
 	bot.lastCmd = strings.TrimSpace(action)
@@ -28,51 +30,68 @@ func ParseCommand(bot *Bot, action string) bool {
 
 	// If EOF on the first read, we expect the cmd to be one of the following
 	if err == io.EOF {
-		if isMulti, ok := allowedCmds[cmd]; ok && isMulti == false {
-			if _, ok = directions[cmd]; ok {
-				bot.direction = cmd
-			} else if cmd == Move {
-				bot.Move(bot.direction)
-			} else if cmd == Report {
-				return true
-			} else {
-				bot.lastError = fmt.Errorf("UNKNOWN COMMAND %s", action)
-				return false
+		nReqArgs, ok := allowedCmds[cmd]
+		if ok {
+			if nReqArgs > 0 {
+				bot.lastError = errors.New("NOT ENOUGH ARGUMENTS")
+				return
 			}
+
+			runSingleCmd(bot, cmd)
+			return
 		}
+
+		bot.lastError = fmt.Errorf("UNKNOWN COMMAND %s", cmd)
+		return
 	} else if err != nil {
 		bot.lastError = err
-		return false
+		return
 	}
 
-	if isMulti, ok := allowedCmds[cmd]; ok && isMulti == true {
-		if cmd != Place {
-			bot.lastError = fmt.Errorf("UNKNOWN COMMAND %s", action)
-			return false
-		}
+	if isMulti, ok := allowedCmds[cmd]; ok && isMulti > 0 {
+		runCmdWithArgs(bot, cmd, cmdReader)
+	}
+}
 
-		args, err := cmdReader.ReadString('\n')
-		if err != nil && err != io.EOF {
-			bot.lastError = err
-			return false
+// runSingleCmd performs commands that do not require arguments
+func runSingleCmd(bot *Bot, cmd string) {
+	if cmd == Left || cmd == Right {
+		bot.Turn(cmd)
+	} else if cmd == Move {
+		bot.Move()
+	} else if cmd == Report {
+		if bot.IsPlaced() == false {
+			bot.lastReport = "Output: NO REPORT AVAILABLE"
+		} else {
+			bot.lastReport = fmt.Sprintf("Output: %d,%d,%s", bot.point.X, bot.point.Y, strings.ToUpper(bot.direction))
 		}
+	}
+}
 
-		parsePlaceArguments(bot, args)
-		return false
+// runCmdWithArgs parses arguments from a command
+func runCmdWithArgs(bot *Bot, cmd string, cmdReader *bufio.Reader) {
+	argsStr, err := cmdReader.ReadString('\n')
+	if err != nil && err != io.EOF {
+		bot.lastError = err
+		return
 	}
 
-	return false
+	// Split args with comma delimiter
+	args := strings.Split(argsStr, ",")
+	if cmd == Place {
+		runPlace(bot, args)
+		return
+	}
+
+	bot.lastError = fmt.Errorf("UNKNOWN COMMAND %s", cmd)
 }
 
 // parsePlaceArguments parses all arguments for PLACE cmd and places
 // the bot accordingly if correct parameters were provided
-func parsePlaceArguments(bot *Bot, argStr string) {
-	// Split them with comma delimiter
-	args := strings.Split(argStr, ",")
-
+func runPlace(bot *Bot, args []string) {
 	// We must have 3 arguments; X,Y,DIRECTION
-	if len(args) != 3 {
-		bot.lastError = errors.New("WRONG NUMBER OF ARGUMENTS")
+	if len(args) != allowedCmds[Place] {
+		bot.lastError = fmt.Errorf("WRONG NUMBER OF ARGUMENTS. %d EXPECTED", allowedCmds[Place])
 		return
 	}
 
@@ -86,31 +105,22 @@ func parsePlaceArguments(bot *Bot, argStr string) {
 	// y must be an integer
 	y, err := strconv.Atoi(strings.TrimSpace(args[1]))
 	if err != nil {
-		bot.lastError = fmt.Errorf("%s IS NOT A VALID X POINT", args[1])
+		bot.lastError = fmt.Errorf("%s IS NOT A VALID Y POINT", args[1])
 		return
 	}
 
 	// direction must exist
-	dir := strings.TrimSpace(args[2])
-	if _, ok := dirFacing[dir]; !ok {
-		bot.lastError = fmt.Errorf("%s IS NOT A VALID DIRECTION", dir)
+	facing := strings.TrimSpace(args[2])
+	_, ok := dirFacing[facing]
+	if ok == false {
+		bot.lastError = fmt.Errorf("%s IS NOT A VALID DIRECTION", facing)
 		return
 	}
 
-	switch dir {
-	case West:
-		dir = Left
-	case East:
-		dir = Right
-	case North:
-		dir = Up
-	case South:
-		dir = Down
-	}
-
-	bot.Place(dir, x, y)
+	bot.Place(facing, x, y)
 }
 
+// sanitizeCmd trim spaces and transforms the command to a lowercase string
 func sanitizeCmd(cmd string) string {
 	cmd = strings.TrimSpace(cmd)
 	return strings.ToLower(cmd)
