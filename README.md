@@ -8,7 +8,7 @@ NicoBot is a little red bot that travels on a table of
 5x5 units. You can either give it instructions from a text
 file, or enter them manually.
 
-## Demonstraction
+## Demonstration
 
 ### Using a file with instruction (./data/test.txt)
 ![Demo with file](./data/gifs/nicobot_file.gif "Nicobot demo with file")
