@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"deco"
-	"nicobot"
+	"github.com/nicored/nicobot/deco"
+	"github.com/nicored/nicobot/nicobot"
 )
 
 func main() {

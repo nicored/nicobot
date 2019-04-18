@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"deco"
+	"github.com/nicored/nicobot/deco"
 	"errors"
 )
 
